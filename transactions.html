@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السحب والإيداع | IRAQ INVEST</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+    <style>
+        :root { --primary: #00f2ff; --bg: #050505; --card: #0d0d0d; --border: rgba(255,255,255,0.08); --success: #00ff88; --danger: #ff4d4d; }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 25px; background: var(--card); padding: 5px; border-radius: 15px; border: 1px solid var(--border); }
+        .tab-btn { padding: 10px 25px; border: none; border-radius: 10px; background: transparent; color: #888; font-weight: bold; cursor: pointer; }
+        .tab-btn.active { background: var(--primary); color: #000; }
+        .form-container { width: 100%; max-width: 400px; background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--border); display: none; }
+        .form-container.active { display: block; animation: slideUp 0.3s; }
+        label { display: block; margin: 15px 0 5px; color: #aaa; font-size: 13px; }
+        input, select { width: 100%; padding: 14px; background: #000; border: 1px solid var(--border); border-radius: 12px; color: #fff; font-family: inherit; }
+        .btn-action { width: 100%; padding: 15px; margin-top: 20px; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; }
+        .btn-deposit { background: var(--primary); color: #000; }
+        .btn-withdraw { background: #fff; color: #000; }
+        .btn-action:active { transform: scale(0.98); }
+        .fee-info { font-size: 11px; color: var(--danger); margin-top: 8px; text-align: center; }
+        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="loading-screen">جاري التحقق من الحساب...</div>
+
+    <h2 style="margin-bottom: 20px;">إدارة الأموال 💸</h2>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('deposit', this)">إيداع</button>
+        <button class="tab-btn" onclick="showTab('withdraw', this)">سحب</button>
+    </div>
+
+    <div id="depositForm" class="form-container active">
+        <div style="background: rgba(0,242,255,0.05); padding: 15px; border-radius: 15px; text-align: center; border: 1px dashed var(--primary);">
+            <p style="font-size: 12px;">حول المبلغ لحساب "أميرة أحمد جابر"</p>
+            <h3 style="color: var(--primary);">2663685010</h3>
+            <p style="font-size: 10px; color: #777; margin-top: 5px;">Zain Cash | FIB | SuperPay</p>
+        </div>
+        <label>المبلغ (أدنى إيداع 10,000 د.ع):</label>
+        <input type="number" id="depAmount" placeholder="10000">
+        <label>رقم العملية (Transaction ID):</label>
+        <input type="text" id="transId" placeholder="أدخل الرقم المرجعي">
+        <button class="btn-action btn-deposit" onclick="handleDeposit()">تأكيد الإيداع</button>
+    </div>
+
+    <div id="withdrawForm" class="form-container">
+        <div style="text-align: center;">
+            <p style="color: #777;">رصيدك الحالي:</p>
+            <h2 style="color: var(--success);"><span id="currentBalance">0</span> د.ع</h2>
+        </div>
+        <label>المبلغ (أدنى سحب 3,000 د.ع):</label>
+        <input type="number" id="withAmount" placeholder="3000" oninput="calculateNet()">
+        
+        <div id="feeDisplay" class="fee-info">رسوم السحب (19%): 0 د.ع | سيصلك: 0 د.ع</div>
+
+        <label>وسيلة الاستلام:</label>
+        <select id="withMethod">
+            <option value="Zain Cash">زين كاش</option>
+            <option value="FIB">FIB</option>
+            <option value="SuperPay">سوبر بي (SuperPay)</option>
+        </select>
+        <label>رقم المحفظة:</label>
+        <input type="text" id="walletNum" placeholder="07XXXXXXXXX">
+        <button class="btn-action btn-withdraw" onclick="handleWithdraw()">طلب سحب</button>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAzcP_T8x5ouwwKkhadtBTdsUxk3XqwJec",
+            databaseURL: "https://vexa-4b2fb-default-rtdb.firebaseio.com/",
+            projectId: "vexa-4b2fb"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        let userId = null;
+
+        // التحقق من المستخدم عند فتح الصفحة
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                userId = user.uid; // الحصول على ID المستخدم الحقيقي
+                document.getElementById('loader').style.display = 'none'; // إخفاء شاشة التحميل
+                loadBalance(); // تشغيل مراقبة الرصيد
+            } else {
+                // لو مفيش جلسة دخول، حوله لصفحة تسجيل الدخول
+                window.location.href = 'index.html'; 
+            }
+        });
+
+        function loadBalance() {
+            // ربط الرصيد بالـ ID الديناميكي
+            db.ref('users/' + userId + '/balance').on('value', snap => {
+                const bal = snap.val() || 0;
+                document.getElementById('currentBalance').innerText = bal.toLocaleString();
+            });
+        }
+
+        function showTab(type, btn) {
+            document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(type + 'Form').classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function calculateNet() {
+            const amount = parseFloat(document.getElementById('withAmount').value) || 0;
+            const fee = amount * 0.19;
+            const net = amount - fee;
+            document.getElementById('feeDisplay').innerText = `رسوم السحب (19%): ${fee.toLocaleString()} د.ع | سيصلك: ${net.toLocaleString()} د.ع`;
+        }
+
+        function handleDeposit() {
+            if(!userId) return;
+            const amount = parseInt(document.getElementById('depAmount').value);
+            const tid = document.getElementById('transId').value;
+            
+            if(!amount || amount < 10000) return alert("الحد الأدنى للإيداع هو 10,000 د.ع");
+            if(!tid) return alert("يرجى إدخال رقم العملية");
+
+            db.ref('deposit_requests').push({
+                userId: userId, // إرسال الـ ID الخاص بالمستخدم الحالي للأدمن
+                amount: amount,
+                transactionId: tid,
+                status: 'pending',
+                date: Date.now()
+            }).then(() => {
+                alert("✅ تم إرسال طلب الإيداع بنجاح");
+                document.getElementById('transId').value = '';
+                document.getElementById('depAmount').value = '';
+            });
+        }
+
+        function handleWithdraw() {
+            if(!userId) return;
+            const amount = parseInt(document.getElementById('withAmount').value);
+            const method = document.getElementById('withMethod').value;
+            const wallet = document.getElementById('walletNum').value;
+
+            if(isNaN(amount) || amount < 3000) return alert("الحد الأدنى للسحب هو 3,000 د.ع");
+            if(wallet.length < 10) return alert("يرجى التأكد من رقم المحفظة");
+
+            db.ref('users/' + userId + '/balance').once('value').then(snap => {
+                const bal = snap.val() || 0;
+                if(amount > bal) return alert("عذراً، رصيدك غير كافٍ");
+
+                const fee = amount * 0.19;
+                const netAmount = amount - fee;
+
+                // الخصم من رصيد المستخدم الحالي
+                db.ref('users/' + userId).update({ balance: bal - amount }).then(() => {
+                    db.ref('withdraw_requests').push({
+                        userId: userId,
+                        requestedAmount: amount,
+                        fee: fee,
+                        netAmount: netAmount,
+                        method: method,
+                        receiverNumber: wallet,
+                        status: 'pending',
+                        date: Date.now()
+                    }).then(() => {
+                        alert("✅ تم تقديم الطلب. سيصلك الصافي بعد خصم الرسوم.");
+                        document.getElementById('withAmount').value = '';
+                        document.getElementById('walletNum').value = '';
+                    });
+                });
+            });
+        }
+    </script>
+</body>
+</html>

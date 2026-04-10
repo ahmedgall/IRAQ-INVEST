@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فريقي والأرباح | IRAQ INVEST</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --bg: #050505;
+            --card-bg: #0d0d0d;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #00ff88;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body {
+            background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif;
+            display: flex; justify-content: center; padding: 20px;
+        }
+
+        .team-container { width: 100%; max-width: 500px; }
+
+        /* كارت رابط المشاركة */
+        .share-card {
+            background: linear-gradient(135deg, #111, #1a1a1a);
+            padding: 25px; border-radius: 25px; border: 1px solid var(--border);
+            text-align: center; margin-bottom: 20px;
+        }
+        .share-card h3 { font-size: 18px; margin-bottom: 15px; color: var(--primary); }
+        
+        .link-box {
+            background: #000; padding: 12px; border-radius: 12px;
+            border: 1px dashed var(--primary); display: flex; align-items: center; gap: 10px;
+            margin-bottom: 15px;
+        }
+        #refLink {
+            flex: 1; background: transparent; border: none; color: #fff;
+            font-size: 13px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+        }
+        .copy-btn {
+            background: var(--primary); color: #000; border: none;
+            padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;
+        }
+
+        /* كروت الإحصائيات */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-card {
+            background: var(--card-bg); padding: 20px; border-radius: 20px;
+            border: 1px solid var(--border); text-align: center;
+        }
+        .stat-card span { font-size: 12px; color: #777; display: block; }
+        .stat-box b { font-size: 20px; color: var(--success); }
+
+        /* شرح العمولة */
+        .bonus-info {
+            background: rgba(0, 242, 255, 0.05); padding: 15px; border-radius: 15px;
+            border: 1px solid rgba(0, 242, 255, 0.1); font-size: 13px; line-height: 1.6;
+        }
+
+        .team-list { margin-top: 30px; }
+        .team-item {
+            background: var(--card-bg); padding: 15px; border-radius: 15px;
+            margin-bottom: 10px; display: flex; justify-content: space-between;
+            align-items: center; border-right: 4px solid var(--primary);
+        }
+        .user-info b { font-size: 14px; display: block; }
+        .user-info small { color: #555; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+<div class="team-container">
+    <h2 style="text-align: center; margin-bottom: 25px; font-weight: 900;">برنامج الشركاء 🤝</h2>
+
+    <div class="share-card">
+        <h3>رابط الإحالة الخاص بك</h3>
+        <p style="font-size: 12px; color: #888; margin-bottom: 15px;">انسخ الرابط وشاركه مع أصدقائك لربح عمولة فورية</p>
+        <div class="link-box">
+            <input type="text" id="refLink" readonly value="جاري توليد الرابط...">
+            <button class="copy-btn" onclick="copyLink()">نسخ</button>
+        </div>
+        <div class="bonus-info">
+            🎁 مكافأة ملكية: احصل على <b>20%</b> من قيمة أول إيداع يقوم به أي صديق يسجل من خلال رابطك!
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span>إجمالي فريقك</span>
+            <b id="teamCount" style="color: #fff;">0</b>
+        </div>
+        <div class="stat-card">
+            <span>أرباح الإحالة</span>
+            <b id="refEarnings">0 د.ع</b>
+        </div>
+    </div>
+
+    <div class="team-list" id="teamListContainer">
+        <h4 style="margin-bottom: 15px; color: #555;">أعضاء سجلوا بواسطتك:</h4>
+        <div id="membersList">
+            <p style="text-align: center; color: #333; font-size: 12px;">لا يوجد أعضاء في فريقك حالياً</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAzcP_T8x5ouwwKkhadtBTdsUxk3XqwJec",
+        authDomain: "vexa-4b2fb.firebaseapp.com",
+        projectId: "vexa-4b2fb",
+        storageBucket: "vexa-4b2fb.firebasestorage.app",
+        messagingSenderId: "977620445308",
+        appId: "1:977620445308:web:71e66418d95c43dc8881f9"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            setupReferral(user.uid);
+            loadTeamData(user.uid);
+        } else {
+            window.location.href = 'login.html';
+        }
+    });
+
+    // 1. إنشاء لينك المشاركة
+    function setupReferral(uid) {
+        // بنستخدم الرابط الحالي وبنضيف عليه كود الـ UID
+        const currentDomain = window.location.origin;
+        const fullLink = currentDomain + "/login.html?ref=" + uid;
+        document.getElementById('refLink').value = fullLink;
+    }
+
+    // 2. نسخ اللينك
+    function copyLink() {
+        const linkInput = document.getElementById('refLink');
+        linkInput.select();
+        navigator.clipboard.writeText(linkInput.value);
+        alert("✅ تم نسخ الرابط بنجاح! انشره الآن");
+    }
+
+    // 3. جلب بيانات الفريق من الفايرستور
+    function loadTeamData(uid) {
+        // بنبحث في كولكشن اليوزرز عن أي حد عنده حقل "referredBy" بيساوي UID المستخدم الحالي
+        db.collection('users').where("referredBy", "==", uid)
+        .onSnapshot((querySnapshot) => {
+            const listDiv = document.getElementById('membersList');
+            const countDisplay = document.getElementById('teamCount');
+            
+            let count = 0;
+            listDiv.innerHTML = "";
+
+            querySnapshot.forEach((doc) => {
+                count++;
+                const member = doc.data();
+                listDiv.innerHTML += `
+                    <div class="team-item">
+                        <div class="user-info">
+                            <b>${member.fullName || 'مستثمر'}</b>
+                            <small>انضم في: ${member.createdAt ? member.createdAt.toDate().toLocaleDateString('ar-EG') : '---'}</small>
+                        </div>
+                        <div style="color:var(--success); font-size:12px;">نشط ✅</div>
+                    </div>
+                `;
+            });
+
+            countDisplay.innerText = count;
+            
+            // جلب إجمالي أرباح الإحالة من بروفايل المستخدم نفسه
+            db.collection('users').doc(uid).get().then(userDoc => {
+                if(userDoc.exists) {
+                    const data = userDoc.data();
+                    document.getElementById('refEarnings').innerText = (data.refEarnings || 0).toLocaleString() + " د.ع";
+                }
+            });
+        });
+    }
+</script>
+
+</body>
+</html>

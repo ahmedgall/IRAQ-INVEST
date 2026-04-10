@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRAQ INVEST | PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --bg: #050505;
+            --side-bg: #0d0d0d;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #00ff88;
+            --danger: #ff4d4d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body {
+            background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif;
+            display: flex; min-height: 100vh; overflow-x: hidden;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 300px; background: var(--side-bg); border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; position: fixed; height: 100vh;
+            right: 0; transition: 0.4s; z-index: 2000;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar { right: -300px; }
+            .sidebar.active { right: 0; box-shadow: -10px 0 50px rgba(0,0,0,0.9); }
+        }
+
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: none; z-index: 1999; backdrop-filter: blur(4px);
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .sidebar-header { padding: 30px 20px; }
+        .logo { font-weight: 900; font-size: 22px; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+
+        .nav-menu { flex: 1; padding: 10px 15px; overflow-y: auto; }
+        .nav-link {
+            display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+            border-radius: 16px; color: #888; text-decoration: none;
+            margin-bottom: 8px; font-weight: 600; transition: 0.3s;
+        }
+        .nav-link:hover, .nav-link.active { background: var(--card-bg); color: var(--primary); }
+
+        /* --- Main Content --- */
+        .main-content { flex: 1; margin-right: 300px; padding: 30px; transition: 0.4s; }
+        @media (max-width: 992px) { .main-content { margin-right: 0; padding-top: 90px; } }
+
+        .mobile-nav {
+            position: fixed; top: 0; right: 0; left: 0; height: 70px;
+            background: rgba(5,5,5,0.8); backdrop-filter: blur(10px);
+            display: none; align-items: center; padding: 0 20px; z-index: 1500;
+            border-bottom: 1px solid var(--border);
+        }
+        @media (max-width: 992px) { .mobile-nav { display: flex; justify-content: space-between; } }
+
+        /* Wallet Card */
+        .wallet-card {
+            background: linear-gradient(135deg, #111, #1a1a1a);
+            border: 1px solid var(--border); padding: 25px; border-radius: 24px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; position: relative; overflow: hidden;
+        }
+
+        /* Animation Loader */
+        .spinner {
+            width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 1s infinite linear; display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .skeleton {
+            background: linear-gradient(90deg, #111 25%, #1d1d1d 50%, #111 75%);
+            background-size: 200% 100%; animation: loading 1.5s infinite;
+            border-radius: 15px;
+        }
+        @keyframes loading { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+        .invest-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .club-card {
+            background: var(--side-bg); border: 1px solid var(--border);
+            padding: 20px; border-radius: 24px; transition: 0.3s;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .club-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+
+        .btn-buy {
+            width: 100%; padding: 14px; border-radius: 16px; border: none;
+            background: var(--primary); color: #000; font-weight: 900;
+            cursor: pointer; transition: 0.3s; margin-top: 10px; text-decoration: none; display: block; text-align: center;
+        }
+
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center;
+            z-index: 3000; padding: 20px;
+        }
+        .modal-content {
+            background: #111; width: 100%; max-width: 400px; padding: 30px;
+            border-radius: 28px; border: 1px solid var(--border); text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleMenu()"></div>
+
+    <div class="mobile-nav">
+        <button onclick="toggleMenu()" style="background:none; border:none; color:#fff; font-size: 24px;">☰</button>
+        <div class="logo" style="font-size: 16px;">IRAQ INVEST</div>
+        <div style="width: 24px;"></div>
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">IRAQ INVEST</div>
+        </div>
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-link active">الرئيسية</a>
+            <a href="team.html" class="nav-link">فريقي (ربح 20%)</a>
+            <a href="transactions.html" class="nav-link">سحب وإيداع</a>
+            <a href="profile.html" class="nav-link">الملف الشخصي</a>
+
+            <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;" id="myPlansSidebar">
+                <p style="font-size: 11px; color: #555; margin-bottom: 10px;">باقاتك النشطة</p>
+                <div class="skeleton" style="height: 40px; margin-bottom: 10px;"></div>
+            </div>
+            
+            <a href="#" onclick="firebase.auth().signOut()" class="nav-link" style="color: var(--danger); margin-top: auto;">تسجيل الخروج</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="wallet-card">
+            <div>
+                <div style="font-size:14px; color:#777;">الرصيد المتاح (المؤكد)</div>
+                <div style="font-size:32px; font-weight:900;">
+                    <span id="userBalance"><div class="spinner"></div></span> 
+                    <small style="font-size: 14px; color: var(--primary);">د.ع</small>
+                </div>
+            </div>
+        </div>
+
+        <h3 style="margin-bottom: 25px;">باقات الاستثمار المتاحة ⚡</h3>
+        <div class="invest-grid" id="investGrid">
+            <div class="club-card skeleton" style="height: 200px;"></div>
+            <div class="club-card skeleton" style="height: 200px;"></div>
+            <div class="club-card skeleton" style="height: 200px;"></div>
+        </div>
+    </main>
+
+    <div class="modal" id="statusModal">
+        <div class="modal-content">
+            <h3 id="modalTitle"></h3>
+            <p id="modalText" style="color: #888; margin: 15px 0;"></p>
+            <button class="btn-buy" onclick="closeModal()">حسناً</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAzcP_T8x5ouwwKkhadtBTdsUxk3XqwJec",
+            databaseURL: "https://vexa-4b2fb-default-rtdb.firebaseio.com/",
+            projectId: "vexa-4b2fb"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        let userId = null;
+
+        // --- التحقق من تسجيل الدخول ---
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                userId = user.uid;
+                loadUserWallet();
+                loadAdminPlans();
+                distributeProfits(); // تشغيل توزيع الأرباح تلقائياً عند الدخول
+            } else {
+                window.location.href = 'login.html'; // توجيه لصفحة تسجيل الدخول لو مش مسجل
+            }
+        });
+
+        // --- جلب بيانات المحفظة والباقات النشطة ---
+        function loadUserWallet() {
+            db.ref('users/' + userId).on('value', (snapshot) => {
+                const data = snapshot.val() || { balance: 0, plans: {} };
+                document.getElementById('userBalance').innerText = (data.balance || 0).toLocaleString();
+                renderMyPlans(data.plans);
+            });
+        }
+
+        // --- جلب خطط الاستثمار من الأدمن ---
+        function loadAdminPlans() {
+            db.ref('admin_plans').on('value', (snapshot) => {
+                const plans = snapshot.val();
+                const grid = document.getElementById('investGrid');
+                
+                grid.innerHTML = '';
+                if (!plans) {
+                    grid.innerHTML = '<p style="color:#555;">لا توجد باقات متاحة حالياً.</p>';
+                    return;
+                }
+
+                for (let key in plans) {
+                    const plan = plans[key];
+                    grid.innerHTML += `
+                        <div class="club-card">
+                            <div style="color:var(--primary); margin-bottom:15px; font-weight:bold; font-size:18px;">${plan.name}</div>
+                            <div class="info-row"><span>سعر الاشتراك:</span><b>${plan.price.toLocaleString()} د.ع</b></div>
+                            <div class="info-row"><span>الربح اليومي:</span><b style="color:var(--success)">${plan.daily.toLocaleString()} د.ع</b></div>
+                            <button class="btn-buy" onclick="buyPlan('${key}', '${plan.name}', ${plan.price}, ${plan.daily})">استثمر الآن</button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // --- شراء باقة جديدة ---
+        function buyPlan(planId, name, price, daily) {
+            const userRef = db.ref('users/' + userId);
+            userRef.once('value').then(snap => {
+                const userData = snap.val() || { balance: 0 };
+                if (userData.balance >= price) {
+                    const updates = {};
+                    updates['balance'] = userData.balance - price;
+                    
+                    const planKey = userRef.child('plans').push().key;
+                    updates['plans/' + planKey] = {
+                        planId, name, dailyProfit: daily, 
+                        purchaseDate: Date.now(), 
+                        lastProfitUpdate: Date.now() 
+                    };
+
+                    userRef.update(updates);
+                    showStatus("تم الاشتراك!", `مبروك، بدأت جني الأرباح من ${name}`);
+                } else {
+                    showStatus("رصيد غير كافٍ", "يرجى شحن المحفظة أولاً.");
+                }
+            });
+        }
+
+        // --- 🔥 نظام توزيع الأرباح التلقائي المحسن ---
+        function distributeProfits() {
+            const userRef = db.ref('users/' + userId);
+            userRef.once('value').then(snap => {
+                const data = snap.val();
+                if (!data || !data.plans) return;
+
+                const now = Date.now();
+                let totalNewProfit = 0;
+                let updates = {};
+                let hasUpdates = false;
+
+                for (let key in data.plans) {
+                    const plan = data.plans[key];
+                    const lastUpdate = plan.lastProfitUpdate || plan.purchaseDate;
+                    const msPassed = now - lastUpdate;
+                    const dayInMs = 24 * 60 * 60 * 1000;
+
+                    if (msPassed >= dayInMs) {
+                        const daysEarned = Math.floor(msPassed / dayInMs);
+                        const profit = daysEarned * plan.dailyProfit;
+                        
+                        totalNewProfit += profit;
+                        // تحديث الوقت ليكون بالضبط بعد مرور الأيام المحسوبة
+                        updates[`plans/${key}/lastProfitUpdate`] = lastUpdate + (daysEarned * dayInMs);
+                        hasUpdates = true;
+                    }
+                }
+
+                if (hasUpdates) {
+                    updates['balance'] = (data.balance || 0) + totalNewProfit;
+                    userRef.update(updates).then(() => {
+                        console.log("تم إضافة الأرباح: " + totalNewProfit);
+                    });
+                }
+            });
+        }
+
+        function renderMyPlans(plans) {
+            const container = document.getElementById('myPlansSidebar');
+            container.innerHTML = '<p style="font-size: 11px; color: #555; margin-bottom: 10px;">باقاتك النشطة</p>';
+            if (!plans) {
+                container.innerHTML += '<span style="font-size:10px; color:#333">لا يوجد باقات نشطة</span>';
+                return;
+            }
+            Object.values(plans).forEach(p => {
+                container.innerHTML += `
+                    <div style="background:rgba(0,242,255,0.05); padding:8px; border-radius:10px; font-size:12px; margin-bottom:5px; border:1px solid rgba(0,242,255,0.1);">
+                        <b>${p.name}</b> <br> <span style="color:var(--success)">+${(p.dailyProfit || 0).toLocaleString()} يومياً</span>
+                    </div>`;
+            });
+        }
+
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function showStatus(title, text) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalText').innerText = text;
+            document.getElementById('statusModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('statusModal').style.display = 'none'; }
+    </script>
+</body>
+</html>

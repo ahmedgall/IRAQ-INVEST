@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRAQ INVEST | الدخول بالرقم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --bg: #020202;
+            --card-bg: rgba(15, 15, 15, 0.9);
+            --input-bg: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.1);
+            --error: #ff4d4d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif;
+            display: flex; align-items: center; justify-content: center; min-height: 100vh;
+            padding: 20px; overflow-x: hidden;
+        }
+
+        .bg-glow {
+            position: absolute; width: 150%; height: 100%;
+            background: radial-gradient(circle at center, var(--secondary) 0%, transparent 50%);
+            filter: blur(80px); opacity: 0.1; z-index: -1;
+        }
+
+        .auth-card {
+            width: 100%; max-width: 420px; padding: 40px 25px;
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 35px; backdrop-filter: blur(40px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+            z-index: 10;
+        }
+
+        .logo-area { text-align: center; margin-bottom: 35px; }
+        .logo-area h1 { font-size: 28px; font-weight: 900; }
+        .logo-area h1 span {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .logo-area p { color: #888; font-size: 13px; margin-top: 8px; }
+
+        .form-group { margin-bottom: 18px; position: relative; }
+        label { display: block; font-size: 12px; color: #aaa; margin-bottom: 8px; padding-right: 5px; }
+
+        input {
+            width: 100%; background: var(--input-bg); border: 1px solid var(--border);
+            padding: 16px 18px; border-radius: 18px; color: #fff;
+            font-family: inherit; font-size: 15px; transition: 0.3s; outline: none;
+            text-align: right;
+        }
+        input#phone { direction: ltr; text-align: left; }
+
+        input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 242, 255, 0.1); }
+        
+        .error-msg {
+            color: var(--error); font-size: 11px; margin-top: 5px;
+            display: none; padding-right: 5px; font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .btn-submit {
+            width: 100%; padding: 16px; border: none; border-radius: 18px;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: #fff; font-weight: 900; font-size: 16px; cursor: pointer;
+            box-shadow: 0 10px 25px rgba(112, 0, 255, 0.3); transition: 0.4s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .toggle-btn { text-align: center; margin-top: 30px; color: #777; font-size: 13px; }
+        .toggle-btn span { color: var(--primary); font-weight: 900; cursor: pointer; padding: 0 5px; }
+
+        #register-extras { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow"></div>
+
+    <div class="auth-card">
+        <div class="logo-area">
+            <h1>IRAQ <span>INVEST</span></h1>
+            <p id="sub-title">استثمر بذكاء في الرياضة العراقية</p>
+        </div>
+
+        <form id="authForm" novalidate>
+            <div id="general-error" class="error-msg" style="text-align: center; margin-bottom: 15px; font-size: 13px; background: rgba(255,77,77,0.1); padding: 8px; border-radius: 10px;"></div>
+
+            <div id="register-extras">
+                <div class="form-group">
+                    <label>الاسم الكامل</label>
+                    <input type="text" id="name" placeholder="أدخل اسمك الحقيقي">
+                    <div id="name-error" class="error-msg"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>رقم الهاتف</label>
+                <input type="tel" id="phone" placeholder="07XXXXXXXXX">
+                <div id="phone-error" class="error-msg"></div>
+            </div>
+
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <input type="password" id="pass" placeholder="8 رموز على الأقل">
+                <div id="pass-error" class="error-msg"></div>
+            </div>
+
+            <div id="confirm-pass-field" style="display: none;">
+                <div class="form-group">
+                    <label>تأكيد كلمة المرور</label>
+                    <input type="password" id="confirm-pass" placeholder="أعد كتابة كلمة المرور">
+                    <div id="confirm-pass-error" class="error-msg"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="mainBtn">دخول المنصة</button>
+        </form>
+
+        <div class="toggle-btn">
+            <p id="toggleText">مستثمر جديد؟ <span onclick="toggleMode()">أنشئ حسابك الآن</span></p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAzcP_T8x5ouwwKkhadtBTdsUxk3XqwJec",
+            databaseURL: "https://vexa-4b2fb-default-rtdb.firebaseio.com/",
+            projectId: "vexa-4b2fb"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let mode = 'login';
+
+        function toggleMode() {
+            const registerExtras = document.getElementById('register-extras');
+            const confirmPassField = document.getElementById('confirm-pass-field');
+            const mainBtn = document.getElementById('mainBtn');
+            const toggleText = document.getElementById('toggleText');
+            
+            hideErrors();
+
+            if (mode === 'login') {
+                mode = 'register';
+                registerExtras.style.display = 'block';
+                confirmPassField.style.display = 'block';
+                mainBtn.innerText = 'إنشاء الحساب الملكي';
+                toggleText.innerHTML = 'لديك حساب بالفعل؟ <span onclick="toggleMode()">سجل دخولك</span>';
+            } else {
+                mode = 'login';
+                registerExtras.style.display = 'none';
+                confirmPassField.style.display = 'none';
+                mainBtn.innerText = 'دخول المنصة';
+                toggleText.innerHTML = 'مستثمر جديد؟ <span onclick="toggleMode()">أنشئ حسابك الآن</span>';
+            }
+        }
+
+        function hideErrors() {
+            document.querySelectorAll('.error-msg').forEach(el => {
+                el.style.display = 'none';
+                el.innerText = '';
+            });
+        }
+
+        function showError(id, message) {
+            const el = document.getElementById(id);
+            el.innerText = message;
+            el.style.display = 'block';
+        }
+
+        document.getElementById('authForm').onsubmit = async (e) => {
+            e.preventDefault();
+            hideErrors();
+            
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('pass').value;
+            const confirmPassword = document.getElementById('confirm-pass').value;
+            const fullName = document.getElementById('name').value.trim();
+            
+            // تحويل الرقم لإيميل وهمي فريد
+            const fakeEmail = phone + "@iraq-invest.com";
+            
+            let hasError = false;
+
+            if (mode === 'register' && fullName.length < 3) {
+                showError('name-error', 'يرجى إدخال اسمك الحقيقي (3 حروف فأكثر)');
+                hasError = true;
+            }
+            
+            const iraqPhoneRegex = /^(077|078|075)\d{8}$/;
+            if (!iraqPhoneRegex.test(phone)) {
+                showError('phone-error', 'رقم الهاتف يجب أن يبدأ بـ 077 أو 078 أو 075 ويتكون من 11 رقم');
+                hasError = true;
+            }
+            
+            if (password.length < 8) {
+                showError('pass-error', 'كلمة المرور قصيرة جداً');
+                hasError = true;
+            }
+
+            if (mode === 'register' && password !== confirmPassword) {
+                showError('confirm-pass-error', 'كلمات المرور غير متطابقة!');
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            const mainBtn = document.getElementById('mainBtn');
+            const originalText = mainBtn.innerText;
+            mainBtn.innerText = 'جاري التحقق...';
+            mainBtn.disabled = true;
+
+            try {
+                if (mode === 'register') {
+                    // محاولة إنشاء الحساب
+                    const res = await auth.createUserWithEmailAndPassword(fakeEmail, password);
+                    await db.ref('users/' + res.user.uid).set({
+                        uid: res.user.uid,
+                        fullName: fullName,
+                        phone: phone,
+                        balance: 0,
+                        plans: {},
+                        totalWithdraw: 0,
+                        role: 'user',
+                        createdAt: Date.now()
+                    });
+                } else {
+                    // محاولة تسجيل الدخول
+                    await auth.signInWithEmailAndPassword(fakeEmail, password);
+                }
+                
+                // التوجيه لصفحة المنصة بعد النجاح
+                window.location.href = 'platform.html';
+
+            } catch (err) {
+                mainBtn.innerText = originalText;
+                mainBtn.disabled = false;
+
+                console.error(err.code);
+                
+                switch (err.code) {
+                    case 'auth/email-already-in-use':
+                        showError('phone-error', 'عذراً، هذا الرقم مسجل مسبقاً بحساب آخر');
+                        break;
+                    case 'auth/wrong-password':
+                        showError('pass-error', 'كلمة المرور التي أدخلتها غير صحيحة');
+                        break;
+                    case 'auth/user-not-found':
+                        showError('general-error', 'لا يوجد حساب مرتبط بهذا الرقم');
+                        break;
+                    case 'auth/network-request-failed':
+                        showError('general-error', 'فشل الاتصال بالإنترنت، يرجى المحاولة لاحقاً');
+                        break;
+                    case 'auth/too-many-requests':
+                        showError('general-error', 'تم حظرك مؤقتاً لمحاولاتك المتكررة الخاطئة');
+                        break;
+                    default:
+                        showError('general-error', 'خطأ في العملية: ' + err.message);
+                }
+            }
+        };
+    </script>
+</body>
+</html>

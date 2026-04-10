@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الملف الشخصي | IRAQ INVEST</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --bg: #050505;
+            --card-bg: #0d0d0d;
+            --border: rgba(255, 255, 255, 0.08);
+            --success: #00ff88;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif;
+            display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px;
+        }
+
+        .profile-container {
+            width: 100%; max-width: 450px; background: var(--card-bg);
+            border-radius: 30px; border: 1px solid var(--border); overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+            padding: 40px 20px; text-align: center; border-bottom: 1px solid var(--border);
+        }
+
+        .avatar-circle {
+            width: 90px; height: 90px; background: var(--bg);
+            border: 2px solid var(--primary); border-radius: 50%;
+            margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;
+            font-size: 35px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
+        }
+
+        .user-name { font-weight: 900; font-size: 22px; margin-bottom: 5px; }
+        .user-id { font-size: 11px; color: var(--primary); opacity: 0.6; letter-spacing: 1px; }
+
+        .stats-bar {
+            display: grid; grid-template-columns: 1fr 1fr; background: var(--border); gap: 1px;
+        }
+        .stat-box {
+            background: var(--card-bg); padding: 20px; text-align: center;
+        }
+        .stat-box span { display: block; font-size: 12px; color: #666; margin-bottom: 5px; }
+        .stat-box b { font-size: 18px; }
+
+        .menu-list { padding: 20px; }
+        .menu-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px; background: rgba(255,255,255,0.02);
+            border-radius: 15px; margin-bottom: 12px; text-decoration: none;
+            color: #fff; border: 1px solid transparent; transition: 0.3s;
+        }
+        .menu-item:hover { border-color: var(--primary); background: rgba(0, 242, 255, 0.05); }
+        
+        .item-right { display: flex; align-items: center; gap: 15px; }
+        .icon-box { width: 35px; height: 35px; background: #151515; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 18px; }
+
+        .logout-btn {
+            width: calc(100% - 40px); margin: 10px 20px 30px; padding: 16px;
+            background: rgba(255, 77, 77, 0.05); color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.1);
+            border-radius: 15px; cursor: pointer; font-weight: bold; font-family: 'Cairo'; transition: 0.3s;
+        }
+        .logout-btn:hover { background: #ff4d4d; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="avatar-circle">👤</div>
+            <div class="user-name" id="userName">جاري التحميل...</div>
+            <div class="user-id" id="userId">ID: --</div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-box">
+                <span>رصيد الحساب</span>
+                <b id="userBalance" style="color: var(--success);">0 د.ع</b>
+            </div>
+            <div class="stat-box">
+                <span>الإحالات</span>
+                <b id="userReferrals">0</b>
+            </div>
+        </div>
+
+        <div class="menu-list">
+            <a href="transactions.html" class="menu-item">
+                <div class="item-right">
+                    <div class="icon-box">💰</div>
+                    <span>السحب والإيداع</span>
+                </div>
+                <small style="color: #444;">←</small>
+            </a>
+
+            <div class="menu-item">
+                <div class="item-right">
+                    <div class="icon-box">📱</div>
+                    <span>رقم الهاتف</span>
+                </div>
+                <span id="userPhone" style="font-size: 14px; color: #888; direction: ltr;">---</span>
+            </div>
+
+            <div class="menu-item">
+                <div class="item-right">
+                    <div class="icon-box">📅</div>
+                    <span>تاريخ الانضمام</span>
+                </div>
+                <span id="joinDate" style="font-size: 12px; color: #888;">--/--/----</span>
+            </div>
+        </div>
+
+        <button class="logout-btn" onclick="handleLogout()">تسجيل الخروج</button>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAzcP_T8x5ouwwKkhadtBTdsUxk3XqwJec",
+            databaseURL: "https://vexa-4b2fb-default-rtdb.firebaseio.com/",
+            projectId: "vexa-4b2fb"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // مراقبة حالة تسجيل الدخول
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                fetchUserData(user.uid);
+            } else {
+                window.location.href = 'login.html'; 
+            }
+        });
+
+        function fetchUserData(uid) {
+            // سحب البيانات من Realtime Database من مسار users/uid
+            db.ref('users/' + uid).on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    // تحديث الواجهة بالمسميات الصحيحة
+                    document.getElementById('userName').innerText = data.fullName || "مستثمر ملكي";
+                    document.getElementById('userId').innerText = "ID: " + uid.substring(0, 10).toUpperCase();
+                    document.getElementById('userPhone').innerText = data.phone || "---";
+                    
+                    const balance = data.balance || 0;
+                    document.getElementById('userBalance').innerText = balance.toLocaleString() + " د.ع";
+                    
+                    document.getElementById('userReferrals').innerText = data.referrals || 0;
+
+                    if (data.createdAt) {
+                        const date = new Date(data.createdAt);
+                        document.getElementById('joinDate').innerText = date.toLocaleDateString('ar-EG');
+                    }
+                }
+            });
+        }
+
+        function handleLogout() {
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            });
+        }
+    </script>
+</body>
+</html>
