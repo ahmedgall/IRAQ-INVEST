@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فريقي والأرباح | IRAQ INVEST</title>
+    <title>فريقي والأرباح | NEXAL INVEST</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -27,11 +27,11 @@
 
         .team-container { width: 100%; max-width: 500px; }
 
-        /* كارت رابط المشاركة */
         .share-card {
             background: linear-gradient(135deg, #111, #1a1a1a);
             padding: 25px; border-radius: 25px; border: 1px solid var(--border);
             text-align: center; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .share-card h3 { font-size: 18px; margin-bottom: 15px; color: var(--primary); }
         
@@ -42,23 +42,24 @@
         }
         #refLink {
             flex: 1; background: transparent; border: none; color: #fff;
-            font-size: 13px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+            font-size: 11px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+            text-align: left; direction: ltr;
         }
         .copy-btn {
             background: var(--primary); color: #000; border: none;
             padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;
+            transition: 0.3s;
         }
+        .copy-btn:active { transform: scale(0.9); }
 
-        /* كروت الإحصائيات */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-card {
             background: var(--card-bg); padding: 20px; border-radius: 20px;
             border: 1px solid var(--border); text-align: center;
         }
-        .stat-card span { font-size: 12px; color: #777; display: block; }
-        .stat-box b { font-size: 20px; color: var(--success); }
+        .stat-card span { font-size: 12px; color: #777; display: block; margin-bottom: 5px; }
+        .stat-card b { font-size: 18px; color: var(--success); }
 
-        /* شرح العمولة */
         .bonus-info {
             background: rgba(0, 242, 255, 0.05); padding: 15px; border-radius: 15px;
             border: 1px solid rgba(0, 242, 255, 0.1); font-size: 13px; line-height: 1.6;
@@ -69,48 +70,52 @@
             background: var(--card-bg); padding: 15px; border-radius: 15px;
             margin-bottom: 10px; display: flex; justify-content: space-between;
             align-items: center; border-right: 4px solid var(--primary);
+            animation: fadeIn 0.5s ease;
         }
-        .user-info b { font-size: 14px; display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .user-info b { font-size: 14px; display: block; color: #eee; }
         .user-info small { color: #555; font-size: 11px; }
     </style>
 </head>
 <body>
 
 <div class="team-container">
-    <h2 style="text-align: center; margin-bottom: 25px; font-weight: 900;">برنامج الشركاء 🤝</h2>
+    <h2 style="text-align: center; margin-bottom: 25px; font-weight: 900; letter-spacing: 1px;">برنامج الشركاء <span style="color:var(--primary)">NEXAL</span></h2>
 
     <div class="share-card">
         <h3>رابط الإحالة الخاص بك</h3>
-        <p style="font-size: 12px; color: #888; margin-bottom: 15px;">انسخ الرابط وشاركه مع أصدقائك لربح عمولة فورية</p>
+        <p style="font-size: 12px; color: #888; margin-bottom: 15px;">انشر الرابط واربح 20% عمولة فورية عن كل إيداع</p>
         <div class="link-box">
             <input type="text" id="refLink" readonly value="جاري توليد الرابط...">
             <button class="copy-btn" onclick="copyLink()">نسخ</button>
         </div>
         <div class="bonus-info">
-            🎁 مكافأة ملكية: احصل على <b>20%</b> من قيمة أول إيداع يقوم به أي صديق يسجل من خلال رابطك!
+            🎁 نظام المكافآت: ستحصل على عمولة <b>20%</b> عند اشتراك صديقك في أي من باقات الأندية!
         </div>
     </div>
 
     <div class="stats-grid">
         <div class="stat-card">
-            <span>إجمالي فريقك</span>
-            <b id="teamCount" style="color: #fff;">0</b>
+            <span>إجمالي الفريق</span>
+            <b id="teamCount">0</b>
         </div>
         <div class="stat-card">
-            <span>أرباح الإحالة</span>
+            <span>أرباحي من الفريق</span>
             <b id="refEarnings">0 د.ع</b>
         </div>
     </div>
 
     <div class="team-list" id="teamListContainer">
-        <h4 style="margin-bottom: 15px; color: #555;">أعضاء سجلوا بواسطتك:</h4>
+        <h4 style="margin-bottom: 15px; color: #555; font-size: 14px;">أعضاء الفريق النشطين:</h4>
         <div id="membersList">
-            <p style="text-align: center; color: #333; font-size: 12px;">لا يوجد أعضاء في فريقك حالياً</p>
+            <p style="text-align: center; color: #333; font-size: 12px; padding: 20px;">جاري تحميل بيانات فريقك...</p>
         </div>
     </div>
 </div>
 
 <script>
+    // إعدادات الفايربيز الخاصة بك
     const firebaseConfig = {
         apiKey: "AIzaSyAzcP_T8x5ouwwKkhadtBTdsUxk3XqwJec",
         authDomain: "vexa-4b2fb.firebaseapp.com",
@@ -129,29 +134,32 @@
             setupReferral(user.uid);
             loadTeamData(user.uid);
         } else {
+            // لو مش مسجل يرجعه لصفحة التسجيل
             window.location.href = 'login.html';
         }
     });
 
-    // 1. إنشاء لينك المشاركة
+    // 1. توليد الرابط بشكل صحيح يمنع الـ 404
     function setupReferral(uid) {
-        // بنستخدم الرابط الحالي وبنضيف عليه كود الـ UID
-        const currentDomain = window.location.origin;
-        const fullLink = currentDomain + "/login.html?ref=" + uid;
+        const url = new URL(window.location.href);
+        // بنجيب المسار الأساسي (مثلاً https://ahmedgall.github.io/repo-name/)
+        const baseUrl = url.origin + url.pathname.replace('team.html', ''); 
+        const fullLink = baseUrl + "login.html?ref=" + uid;
         document.getElementById('refLink').value = fullLink;
     }
 
-    // 2. نسخ اللينك
+    // 2. وظيفة النسخ
     function copyLink() {
         const linkInput = document.getElementById('refLink');
         linkInput.select();
-        navigator.clipboard.writeText(linkInput.value);
-        alert("✅ تم نسخ الرابط بنجاح! انشره الآن");
+        navigator.clipboard.writeText(linkInput.value).then(() => {
+            alert("✅ تم نسخ الرابط! ارسله الآن لأصدقائك.");
+        });
     }
 
-    // 3. جلب بيانات الفريق من الفايرستور
+    // 3. جلب البيانات ومراقبتها (Real-time)
     function loadTeamData(uid) {
-        // بنبحث في كولكشن اليوزرز عن أي حد عنده حقل "referredBy" بيساوي UID المستخدم الحالي
+        // مراقبة أعضاء الفريق
         db.collection('users').where("referredBy", "==", uid)
         .onSnapshot((querySnapshot) => {
             const listDiv = document.getElementById('membersList');
@@ -160,29 +168,36 @@
             let count = 0;
             listDiv.innerHTML = "";
 
-            querySnapshot.forEach((doc) => {
-                count++;
-                const member = doc.data();
-                listDiv.innerHTML += `
-                    <div class="team-item">
-                        <div class="user-info">
-                            <b>${member.fullName || 'مستثمر'}</b>
-                            <small>انضم في: ${member.createdAt ? member.createdAt.toDate().toLocaleDateString('ar-EG') : '---'}</small>
+            if (querySnapshot.empty) {
+                listDiv.innerHTML = `<p style="text-align: center; color: #333; font-size: 12px; padding: 20px;">لا يوجد أعضاء في فريقك حالياً</p>`;
+            } else {
+                querySnapshot.forEach((doc) => {
+                    count++;
+                    const member = doc.data();
+                    // تنسيق التاريخ بأمان
+                    const dateStr = member.createdAt ? (member.createdAt.toDate ? member.createdAt.toDate().toLocaleDateString('ar-EG') : 'حديث') : '---';
+                    
+                    listDiv.innerHTML += `
+                        <div class="team-item">
+                            <div class="user-info">
+                                <b>${member.fullName || member.phone || 'مستثمر جديد'}</b>
+                                <small>تاريخ الانضمام: ${dateStr}</small>
+                            </div>
+                            <div style="color:var(--success); font-size:11px; font-weight:bold;">نشط ✅</div>
                         </div>
-                        <div style="color:var(--success); font-size:12px;">نشط ✅</div>
-                    </div>
-                `;
-            });
-
+                    `;
+                });
+            }
             countDisplay.innerText = count;
-            
-            // جلب إجمالي أرباح الإحالة من بروفايل المستخدم نفسه
-            db.collection('users').doc(uid).get().then(userDoc => {
-                if(userDoc.exists) {
-                    const data = userDoc.data();
-                    document.getElementById('refEarnings').innerText = (data.refEarnings || 0).toLocaleString() + " د.ع";
-                }
-            });
+        });
+
+        // مراقبة الرصيد والأرباح بشكل مباشر
+        db.collection('users').doc(uid).onSnapshot(doc => {
+            if(doc.exists) {
+                const data = doc.data();
+                const earnings = data.refEarnings || 0;
+                document.getElementById('refEarnings').innerText = earnings.toLocaleString() + " د.ع";
+            }
         });
     }
 </script>
