@@ -136,7 +136,7 @@
         </div>
         <nav class="nav-menu">
             <a href="index.html" class="nav-link active">الرئيسية</a>
-            <a href="te3.html" class="nav-link">فريقي (ربح 20%)</a>
+            <a href="team.html" class="nav-link">فريقي (ربح 20%)</a>
             <a href="transactions.html" class="nav-link">سحب وإيداع</a>
             <a href="profile.html" class="nav-link">الملف الشخصي</a>
 
@@ -145,7 +145,7 @@
                 <div class="skeleton" style="height: 40px; margin-bottom: 10px;"></div>
             </div>
             
-            <a href="#" onclick="firebase.auth().signOut()" class="nav-link" style="color: var(--danger); margin-top: auto;">تسجيل الخروج</a>
+            <a href="index.html" onclick="firebase.auth().signOut()" class="nav-link" style="color: var(--danger); margin-top: auto;">تسجيل الخروج</a>
         </nav>
     </aside>
 
@@ -196,7 +196,7 @@
                 loadAdminPlans();
                 distributeProfits(); // تشغيل توزيع الأرباح تلقائياً عند الدخول
             } else {
-                window.location.href = 'login.html'; // توجيه لصفحة تسجيل الدخول لو مش مسجل
+                window.location.href = 'index.html'; // توجيه لصفحة تسجيل الدخول لو مش مسجل
             }
         });
 
