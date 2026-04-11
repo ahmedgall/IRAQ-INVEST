@@ -14,115 +14,232 @@
         :root {
             --primary: #00f2ff;
             --secondary: #7000ff;
-            --bg: #050505;
-            --card-bg: #0d0d0d;
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #030303;
+            --card-bg: #0a0a0a;
+            --border: rgba(255, 255, 255, 0.05);
             --success: #00ff88;
+            --glass: rgba(255, 255, 255, 0.02);
+            --skeleton: rgba(255, 255, 255, 0.05);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif;
-            display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px;
+            background: var(--bg);
+            background-image: radial-gradient(circle at top right, rgba(0, 242, 255, 0.05), transparent),
+                              radial-gradient(circle at bottom left, rgba(112, 0, 255, 0.05), transparent);
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Skeleton Animation */
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.5; }
+        }
+
+        .loading .skeleton-text {
+            background: var(--skeleton);
+            color: transparent !important;
+            border-radius: 4px;
+            animation: pulse 1.5s infinite;
+            display: inline-block;
         }
 
         .profile-container {
-            width: 100%; max-width: 450px; background: var(--card-bg);
-            border-radius: 30px; border: 1px solid var(--border); overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 420px;
+            background: var(--card-bg);
+            border-radius: 35px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            position: relative;
         }
 
         .profile-header {
-            background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
-            padding: 40px 20px; text-align: center; border-bottom: 1px solid var(--border);
+            padding: 50px 20px 30px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
         }
 
         .avatar-circle {
-            width: 90px; height: 90px; background: var(--bg);
-            border: 2px solid var(--primary); border-radius: 50%;
-            margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;
-            font-size: 35px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #111, #1a1a1a);
+            border: 1px solid var(--border);
+            border-radius: 35% 65% 62% 38% / 34% 41% 59% 66%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: morphing 10s infinite alternate ease-in-out;
         }
 
-        .user-name { font-weight: 900; font-size: 22px; margin-bottom: 5px; }
-        .user-id { font-size: 11px; color: var(--primary); opacity: 0.6; letter-spacing: 1px; }
+        @keyframes morphing {
+            0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+            100% { border-radius: 50% 50% 30% 70% / 50% 60% 40% 60%; }
+        }
 
-        .stats-bar {
-            display: grid; grid-template-columns: 1fr 1fr; background: var(--border); gap: 1px;
-        }
-        .stat-box {
-            background: var(--card-bg); padding: 20px; text-align: center;
-        }
-        .stat-box span { display: block; font-size: 12px; color: #666; margin-bottom: 5px; }
-        .stat-box b { font-size: 18px; }
+        .avatar-circle svg { width: 45px; height: 45px; fill: var(--primary); filter: drop-shadow(0 0 8px var(--primary)); }
 
-        .menu-list { padding: 20px; }
-        .menu-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 18px; background: rgba(255,255,255,0.02);
-            border-radius: 15px; margin-bottom: 12px; text-decoration: none;
-            color: #fff; border: 1px solid transparent; transition: 0.3s;
+        .user-name { font-weight: 900; font-size: 24px; letter-spacing: -0.5px; margin-bottom: 5px; min-width: 150px; }
+        .user-id { font-size: 10px; color: var(--primary); font-weight: 700; opacity: 0.5; letter-spacing: 2px; text-transform: uppercase; min-width: 100px;}
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 0 20px 20px;
+            gap: 15px;
         }
-        .menu-item:hover { border-color: var(--primary); background: rgba(0, 242, 255, 0.05); }
+
+        .stat-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 20px 15px;
+            border-radius: 24px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card span { display: block; font-size: 11px; color: #666; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
+        .stat-card b { font-size: 17px; font-weight: 900; color: #fff; display: block; min-height: 25px;}
+        .stat-card b.balance { color: var(--success); text-shadow: 0 0 15px rgba(0, 255, 136, 0.2); }
+
+        .menu-section { padding: 10px 20px 20px; }
         
-        .item-right { display: flex; align-items: center; gap: 15px; }
-        .icon-box { width: 35px; height: 35px; background: #151515; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 18px; }
-
-        .logout-btn {
-            width: calc(100% - 40px); margin: 10px 20px 30px; padding: 16px;
-            background: rgba(255, 77, 77, 0.05); color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.1);
-            border-radius: 15px; cursor: pointer; font-weight: bold; font-family: 'Cairo'; transition: 0.3s;
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            margin-bottom: 12px;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .logout-btn:hover { background: #ff4d4d; color: #fff; }
+
+        .menu-content { display: flex; align-items: center; gap: 15px; }
+        .icon-container {
+            width: 42px;
+            height: 42px;
+            background: #111;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-container svg { width: 20px; height: 20px; fill: none; stroke: var(--primary); stroke-width: 2; }
+
+        .menu-text span { display: block; font-weight: 700; font-size: 14px; }
+        .menu-text small { display: block; font-size: 10px; color: #555; }
+
+        .value-text { font-size: 13px; font-weight: 700; color: #888; letter-spacing: 0.5px; min-width: 60px; text-align: left;}
+
+        .logout-wrapper { padding: 10px 20px 30px; }
+        .logout-btn {
+            width: 100%;
+            padding: 18px;
+            background: transparent;
+            color: #ff4d4d;
+            border: 1px solid rgba(255, 77, 77, 0.2);
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 900;
+            font-size: 14px;
+            font-family: 'Cairo';
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
     </style>
 </head>
-<body>
-
-    <div class="profile-container">
+<body class="loading"> <div class="profile-container">
         <div class="profile-header">
-            <div class="avatar-circle">👤</div>
-            <div class="user-name" id="userName">جاري التحميل...</div>
-            <div class="user-id" id="userId">ID: --</div>
-        </div>
-
-        <div class="stats-bar">
-            <div class="stat-box">
-                <span>رصيد الحساب</span>
-                <b id="userBalance" style="color: var(--success);">0 د.ع</b>
-            </div>
-            <div class="stat-box">
-                <span>الإحالات</span>
-                <b id="userReferrals">0</b>
-            </div>
-        </div>
-
-        <div class="menu-list">
-            <a href="transactions.html" class="menu-item">
-                <div class="item-right">
-                    <div class="icon-box">💰</div>
-                    <span>السحب والإيداع</span>
+            <div class="avatar-wrapper">
+                <div class="avatar-circle">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                 </div>
-                <small style="color: #444;">←</small>
+            </div>
+            <div class="user-name" id="userName"><span class="skeleton-text">اسم المستثمر</span></div>
+            <div class="user-id" id="userId"><span class="skeleton-text">ID: 00000000</span></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>المحفظة</span>
+                <b id="userBalance" class="balance"><span class="skeleton-text">0,000 د.ع</span></b>
+            </div>
+            <div class="stat-card">
+                <span>الأصدقاء</span>
+                <b id="userReferrals"><span class="skeleton-text">00</span></b>
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <a href="transactions.html" class="menu-item">
+                <div class="menu-content">
+                    <div class="icon-container">
+                        <svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="menu-text">
+                        <span>إدارة الأموال</span>
+                        <small>سحب، إيداع، تحويل</small>
+                    </div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" style="stroke: #333; fill: none; stroke-width: 3;"><path d="M15 18l-6-6 6-6"/></svg>
             </a>
 
             <div class="menu-item">
-                <div class="item-right">
-                    <div class="icon-box">📱</div>
-                    <span>رقم الهاتف</span>
+                <div class="menu-content">
+                    <div class="icon-container">
+                        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="menu-text">
+                        <span>التواصل</span>
+                        <small>رقم الهاتف الموثق</small>
+                    </div>
                 </div>
-                <span id="userPhone" style="font-size: 14px; color: #888; direction: ltr;">---</span>
+                <span class="value-text" id="userPhone"><span class="skeleton-text">07700000</span></span>
             </div>
 
             <div class="menu-item">
-                <div class="item-right">
-                    <div class="icon-box">📅</div>
-                    <span>تاريخ الانضمام</span>
+                <div class="menu-content">
+                    <div class="icon-container">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div class="menu-text">
+                        <span>تاريخ البدء</span>
+                        <small>تاريخ انضمامك إلينا</small>
+                    </div>
                 </div>
-                <span id="joinDate" style="font-size: 12px; color: #888;">--/--/----</span>
+                <span class="value-text" id="joinDate"><span class="skeleton-text">يناير 2024</span></span>
             </div>
         </div>
 
-        <button class="logout-btn" onclick="handleLogout()">تسجيل الخروج</button>
+        <div class="logout-wrapper">
+            <button class="logout-btn" onclick="handleLogout()">
+                تسجيل الخروج
+            </button>
+        </div>
     </div>
 
     <script>
@@ -136,7 +253,6 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // مراقبة حالة تسجيل الدخول
         auth.onAuthStateChanged((user) => {
             if (user) {
                 fetchUserData(user.uid);
@@ -146,33 +262,36 @@
         });
 
         function fetchUserData(uid) {
-            // سحب البيانات من Realtime Database من مسار users/uid
             db.ref('users/' + uid).on('value', (snapshot) => {
+                // إزالة كلاس التحميل بمجرد استلام أول إشارة من فايربيس
+                document.body.classList.remove('loading');
+
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     
-                    // تحديث الواجهة بالمسميات الصحيحة
+                    // استخدام innerHTML عشان لو فيه تيجان أو أيقونات مستقبلية
                     document.getElementById('userName').innerText = data.fullName || "مستثمر ملكي";
-                    document.getElementById('userId').innerText = "ID: " + uid.substring(0, 10).toUpperCase();
+                    document.getElementById('userId').innerText = "ID: " + uid.substring(0, 8).toUpperCase();
                     document.getElementById('userPhone').innerText = data.phone || "---";
                     
                     const balance = data.balance || 0;
                     document.getElementById('userBalance').innerText = balance.toLocaleString() + " د.ع";
-                    
                     document.getElementById('userReferrals').innerText = data.referrals || 0;
 
                     if (data.createdAt) {
                         const date = new Date(data.createdAt);
-                        document.getElementById('joinDate').innerText = date.toLocaleDateString('ar-EG');
+                        document.getElementById('joinDate').innerText = date.toLocaleDateString('ar-EG', {month: 'short', year: 'numeric'});
                     }
                 }
             });
         }
 
         function handleLogout() {
-            auth.signOut().then(() => {
-                window.location.href = 'login.html';
-            });
+            if(confirm("هل تريد حقاً تسجيل الخروج؟")) {
+                auth.signOut().then(() => {
+                    window.location.href = 'login.html';
+                });
+            }
         }
     </script>
 </body>
