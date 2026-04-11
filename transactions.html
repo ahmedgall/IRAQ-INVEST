@@ -60,10 +60,7 @@
             <p style="color: #777;">رصيدك الحالي:</p>
             <h2 style="color: var(--success);"><span id="currentBalance">0</span> د.ع</h2>
         </div>
-        <label>المبلغ (أدنى سحب 3,000 د.ع):</label>
-        <input type="number" id="withAmount" placeholder="3000" oninput="calculateNet()">
-        
-        <div id="feeDisplay" class="fee-info">رسوم السحب (19%): 0 د.ع | سيصلك: 0 د.ع</div>
+        <label>المبلغ (أدنى سحب 5,000 د.ع):</label> <input type="number" id="withAmount" placeholder="5000" oninput="calculateNet()"> <div id="feeDisplay" class="fee-info">رسوم السحب (19%): 0 د.ع | سيصلك: 0 د.ع</div>
 
         <label>وسيلة الاستلام:</label>
         <select id="withMethod">
@@ -91,17 +88,15 @@
         // التحقق من المستخدم عند فتح الصفحة
         auth.onAuthStateChanged((user) => {
             if (user) {
-                userId = user.uid; // الحصول على ID المستخدم الحقيقي
-                document.getElementById('loader').style.display = 'none'; // إخفاء شاشة التحميل
-                loadBalance(); // تشغيل مراقبة الرصيد
+                userId = user.uid;
+                document.getElementById('loader').style.display = 'none';
+                loadBalance();
             } else {
-                // لو مفيش جلسة دخول، حوله لصفحة تسجيل الدخول
                 window.location.href = 'index.html'; 
             }
         });
 
         function loadBalance() {
-            // ربط الرصيد بالـ ID الديناميكي
             db.ref('users/' + userId + '/balance').on('value', snap => {
                 const bal = snap.val() || 0;
                 document.getElementById('currentBalance').innerText = bal.toLocaleString();
@@ -131,7 +126,7 @@
             if(!tid) return alert("يرجى إدخال رقم العملية");
 
             db.ref('deposit_requests').push({
-                userId: userId, // إرسال الـ ID الخاص بالمستخدم الحالي للأدمن
+                userId: userId,
                 amount: amount,
                 transactionId: tid,
                 status: 'pending',
@@ -149,7 +144,8 @@
             const method = document.getElementById('withMethod').value;
             const wallet = document.getElementById('walletNum').value;
 
-            if(isNaN(amount) || amount < 3000) return alert("الحد الأدنى للسحب هو 3,000 د.ع");
+            // تم تعديل التحقق هنا إلى 5000
+            if(isNaN(amount) || amount < 5000) return alert("الحد الأدنى للسحب هو 5,000 د.ع"); 
             if(wallet.length < 10) return alert("يرجى التأكد من رقم المحفظة");
 
             db.ref('users/' + userId + '/balance').once('value').then(snap => {
@@ -159,7 +155,6 @@
                 const fee = amount * 0.19;
                 const netAmount = amount - fee;
 
-                // الخصم من رصيد المستخدم الحالي
                 db.ref('users/' + userId).update({ balance: bal - amount }).then(() => {
                     db.ref('withdraw_requests').push({
                         userId: userId,
