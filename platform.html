@@ -118,7 +118,71 @@
             background: #111; width: 100%; max-width: 400px; padding: 30px;
             border-radius: 28px; border: 1px solid var(--border); text-align: center;
         }
-    </style>
+  
+  
+  
+  
+  
+
+        .telegram-float {
+    position: fixed;
+    bottom: 30px;
+    left: 30px; /* خليته على الشمال عشان ميتعارضش مع أزرار السحب لو حطيت حاجة تانية */
+    background: linear-gradient(45deg, #0088cc, #00f2ff);
+    color: #000;
+    padding: 12px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 10px 25px rgba(0, 242, 255, 0.3);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.telegram-float:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(0, 242, 255, 0.5);
+    color: #000;
+}
+
+/* أنيميشن نبض خفيف للفت الانتباه */
+@keyframes pulse-telegram {
+    0% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(0, 242, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0); }
+}
+
+.telegram-float {
+    animation: pulse-telegram 2s infinite;
+}
+
+/* إخفاء النص في الشاشات الصغيرة لو حابب يكون أيقونة بس */
+@media (max-width: 480px) {
+    .telegram-float span {
+        display: none;
+    }
+    .telegram-float {
+        padding: 15px;
+        border-radius: 50%;
+        bottom: 20px;
+        left: 20px;
+    }
+}
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  </style>
 </head>
 <body>
 
@@ -152,7 +216,7 @@
     <main class="main-content">
         <div class="wallet-card">
             <div>
-                <div style="font-size:14px; color:#777;">الرصيد المتاح</div>
+                <div style="font-size:14px; color:#777;">الرصيد المتاح (المؤكد)</div>
                 <div style="font-size:32px; font-weight:900;">
                     <span id="userBalance"><div class="spinner"></div></span> 
                     <small style="font-size: 14px; color: var(--primary);">د.ع</small>
@@ -175,6 +239,18 @@
             <button class="btn-buy" onclick="closeModal()">حسناً</button>
         </div>
     </div>
+
+
+
+
+<a href="https://t.me/E_u_ue" class="telegram-float" target="_blank">
+    <svg viewBox="0 0 24 24" width="28" height="28">
+        <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+    </svg>
+    <span>انضم لقناتنا</span>
+</a>
+
+
 
     <script>
         const firebaseConfig = {
